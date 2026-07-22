@@ -1,7 +1,14 @@
 // slightly rearranged vector components so it matches with LCH
 // M_PI and srgb_transfer_function are provided by oklab.frag.glsl (included before this file)
+
+// Display bound for OKLCH chroma: C=1.0 on the input axis maps to this value.
+// Deliberately gamut-fitted (max sRGB chroma is ~0.323), NOT the CSS oklch()
+// reference range of 0.4 — a wider bound would waste a third of the axis on
+// colors that clip.
+const float OKLCH_MAX_C = 0.34;
+
 vec3 lch2rgb(vec3 lch) {
-    lch.y *= 0.34;
+    lch.y *= OKLCH_MAX_C;
 
     vec3 lab = vec3(
         lch.x,

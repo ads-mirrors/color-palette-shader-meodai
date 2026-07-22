@@ -4,8 +4,11 @@ export type Defines = Record<string, number | false>;
 
 // ── CPU-side color math (mirrors GLSL conversions) ──────────────────────────
 
+// Sign-mirrored (extended sRGB), matching the GLSL srgb_transfer_function_inv.
 function _srgbToLinear(c: number): number {
-  return c > 0.04045 ? ((c + 0.055) / 1.055) ** 2.4 : c / 12.92;
+  const s = c < 0 ? -1 : 1;
+  c = Math.abs(c);
+  return s * (c > 0.04045 ? ((c + 0.055) / 1.055) ** 2.4 : c / 12.92);
 }
 
 function _linearToOklab(r: number, g: number, b: number): [number, number, number] {
@@ -134,6 +137,15 @@ function _xyzToCam16ucsD65(x: number, y: number, z: number): [number, number, nu
   return [Jp, Mp * Math.cos(hRad), Mp * Math.sin(hRad)];
 }
 
+// FCC 1953 NTSC YIQ, on gamma-encoded sRGB (mirrors srgb_to_yiq in deltaE.frag.glsl)
+function _srgbToYiq(r: number, g: number, b: number): [number, number, number] {
+  return [
+    0.299 * r + 0.587 * g + 0.114 * b,
+    0.595716 * r - 0.274453 * g - 0.321263 * b,
+    0.211456 * r - 0.522591 * g + 0.311135 * b,
+  ];
+}
+
 function _srgbToCam16ucsD65(r: number, g: number, b: number): [number, number, number] {
   const lr = _srgbToLinear(r);
   const lg = _srgbToLinear(g);
@@ -178,7 +190,10 @@ export function computeMetricPalette(palette: ColorList, metricCode: number): Fl
       case 10: // cam16ucsD65
         c = _srgbToCam16ucsD65(r, g, b);
         break;
-      default: // 0 (rgb), 4 (kotsarenkoRamos)
+      case 11: // kotsarenkoRamosYIQ
+        c = _srgbToYiq(r, g, b);
+        break;
+      default: // 0 (rgb), 4 (redmean)
         c = [r, g, b];
     }
     out[i * 4] = c[0];

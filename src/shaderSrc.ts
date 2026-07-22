@@ -28,7 +28,7 @@ import shaderClosestColor from './shaders/closestColor.frag.glsl?raw' assert { t
 //   closestColor – branches on DISTANCE_METRIC define; uses everything above
 //
 // Defines (compile-time, prepended to shader source — trigger recompile, no runtime branching):
-//   DISTANCE_METRIC  int  0=rgb 1=oklab 2=deltaE76(=cielabD65) 3=deltaE2000 4=kotsarenkoRamos 5=deltaE94 6=oklrab 7=cielabD50 8=okLightness 9=liMatch 10=cam16ucsD65
+//   DISTANCE_METRIC  int  0=rgb 1=oklab 2=deltaE76(=cielabD65) 3=deltaE2000 4=redmean 5=deltaE94 6=oklrab 7=cielabD50 8=okLightness 9=liMatch 10=cam16ucsD65 11=kotsarenkoRamosYIQ
 //   COLOR_MODEL      int  0=rgb 1=rgb12bit 2=rgb8bit 3=oklab 4=okhsv 5=okhsvPolar
 //                         6=okhsl 7=okhslPolar 8=oklch 9=oklchPolar 10=hsv 11=hsvPolar
 //                         12=hsl 13=hslPolar 14=hwb 15=hwbPolar 16=oklrab 17=oklrch
@@ -53,10 +53,12 @@ void main() {
 
 // modelToRGB and main are separated so the selective assembler can reuse them.
 export const modelToRGBSrc = `
-// CSS Color Level 4 reference ranges used as display bounds.
-// Intentionally slightly wider than sRGB to accommodate P3/Rec2020 and
-// match browser/colorjs conventions: https://www.w3.org/TR/css-color-4/
-const float OKLAB_MAX_AB = 0.5;   // CSS oklab() a/b reference range
+// Display bounds for the unbounded axes of each model.
+// CIELab values follow the CSS Color 4 reference ranges
+// (https://www.w3.org/TR/css-color-4/); the OKLab bound is deliberately wider
+// than CSS's ±0.4 so the full P3/Rec2020 a/b extent stays on-axis.
+// (OKLCH chroma has its own gamut-fitted bound: OKLCH_MAX_C in lch2rgb.frag.glsl.)
+const float OKLAB_MAX_AB = 0.5;   // wider than the CSS oklab() ±0.4 reference range
 const float CIELAB_MAX_AB = 125.0; // CSS lab() a/b reference range
 const float CIELCH_MAX_C  = 150.0; // CSS lch() C reference range
 
@@ -456,7 +458,8 @@ function shaderNeedsForMetric(metric: number): Partial<ShaderNeeds> {
     case 5: // deltaE76, deltaE2000, deltaE94
       return { oklab: true, srgb2rgb: true, cielab2rgb: true, deltaE: true };
     case 4:
-      return { deltaE: true }; // kotsarenkoRamos
+    case 11:
+      return { deltaE: true }; // redmean, kotsarenkoRamosYIQ
     case 7:
       return { oklab: true, srgb2rgb: true, cielab2rgb: true }; // cielabD50
     case 10:

@@ -345,7 +345,8 @@ Controls how "nearest palette color" is determined per pixel.
 
 | Value               | Description                                                                                              | Cost   |
 | ------------------- | -------------------------------------------------------------------------------------------------------- | ------ |
-| `'kotsarenkoRamos'` | Weighted Euclidean in sRGB. Weights R and B by mean red for quick perceptual improvement over plain RGB. | lowest |
+| `'redmean'`         | "Redmean" weighted Euclidean in sRGB ([Riemersma](https://www.compuphase.com/cmetric.htm)). Weights R and B by mean red for quick perceptual improvement over plain RGB. `'kotsarenkoRamos'` is a deprecated alias (the formula was misattributed). | lowest |
+| `'kotsarenkoRamosYIQ'` | The actual Kotsarenko & Ramos (2010) metric: weighted Euclidean in YIQ (NTSC). Cheap, tuned on perceptual data.                            | lowest |
 | `'rgb'`             | Plain Euclidean in sRGB. Not perceptually uniform. Useful as a baseline.                                 | lowest |
 
 ---

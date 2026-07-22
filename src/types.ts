@@ -42,7 +42,10 @@ export type DistanceMetric =
   | 'deltaE76'
   | 'deltaE94'
   | 'deltaE2000'
+  | 'redmean'
+  /** @deprecated Misattributed name for Riemersma's "redmean" formula — use 'redmean' for the same result, or 'kotsarenkoRamosYIQ' for the actual Kotsarenko/Ramos metric. */
   | 'kotsarenkoRamos'
+  | 'kotsarenkoRamosYIQ'
   | 'oklrab'
   | 'cielabD50'
   | 'okLightness'

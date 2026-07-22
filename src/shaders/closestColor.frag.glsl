@@ -1,4 +1,4 @@
-// DISTANCE_METRIC define: 0=rgb, 1=oklab, 2=deltaE76, 3=deltaE2000, 4=kotsarenkoRamos, 5=deltaE94, 6=oklrab, 7=cielabD50, 8=okLightness, 9=liMatch, 10=cam16ucsD65
+// DISTANCE_METRIC define: 0=rgb, 1=oklab, 2=deltaE76, 3=deltaE2000, 4=redmean, 5=deltaE94, 6=oklrab, 7=cielabD50, 8=okLightness, 9=liMatch, 10=cam16ucsD65, 11=kotsarenkoRamosYIQ
 
 uniform sampler2D paletteMetricTexture;
 uniform int uPaletteSize;
@@ -19,6 +19,8 @@ vec3 closestColor(vec3 color, sampler2D paletteTexture) {
     vec3 colorConverted = linear_srgb_to_oklab(srgb2rgb(color));
   #elif DISTANCE_METRIC == 10
     vec3 colorConverted = srgb_to_cam16ucs(color);
+  #elif DISTANCE_METRIC == 11
+    vec3 colorConverted = srgb_to_yiq(color);
   #elif DISTANCE_METRIC == 2 || DISTANCE_METRIC == 3 || DISTANCE_METRIC == 5
     vec3 colorConverted = srgb_to_cielab(color);
   #else
@@ -32,15 +34,19 @@ vec3 closestColor(vec3 color, sampler2D paletteTexture) {
     #if DISTANCE_METRIC == 3
       dist = deltaE2000(colorConverted, texelFetch(paletteMetricTexture, ivec2(i, 0), 0).rgb);
     #elif DISTANCE_METRIC == 4
-      dist = kotsarenkoRamos(color, paletteColor);
+      dist = redmean(color, paletteColor);
     #elif DISTANCE_METRIC == 5
-      dist = deltaE94(colorConverted, texelFetch(paletteMetricTexture, ivec2(i, 0), 0).rgb);
+      // CIE94 is asymmetric (SC/SH derive from the first argument's chroma);
+      // the palette entry is the reference, so it goes first.
+      dist = deltaE94(texelFetch(paletteMetricTexture, ivec2(i, 0), 0).rgb, colorConverted);
     #elif DISTANCE_METRIC == 8
       dist = abs(colorConverted.x - texelFetch(paletteMetricTexture, ivec2(i, 0), 0).x);
     #elif DISTANCE_METRIC == 9
       vec3 _pm9 = texelFetch(paletteMetricTexture, ivec2(i, 0), 0).rgb;
       float _t9 = LI_MATCH_T;
       dist = distance(colorConverted, _pm9) * (1.0 - _t9) + abs(colorConverted.x - _pm9.x) * _t9;
+    #elif DISTANCE_METRIC == 11
+      dist = kotsarenkoRamosYIQ(colorConverted, texelFetch(paletteMetricTexture, ivec2(i, 0), 0).rgb);
     #else
       dist = distance(colorConverted, texelFetch(paletteMetricTexture, ivec2(i, 0), 0).rgb);
     #endif

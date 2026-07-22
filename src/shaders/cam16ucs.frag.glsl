@@ -55,7 +55,10 @@ vec3 xyz_to_cam16ucs(vec3 xyz) {
   float a = R_a - 12.0 * G_a / 11.0 + B_a / 11.0;
   float b = (R_a + G_a - 2.0 * B_a) / 9.0;
 
-  float h = atan(b, a) / TWO_PI;
+  // Guard atan(0,0): undefined in GLSL ES (NaN on some drivers). Achromatic
+  // colors have a=b=0 exactly; their hue is meaningless, any finite value works.
+  bool achromatic = abs(a) < 1e-9 && abs(b) < 1e-9;
+  float h = achromatic ? 0.0 : atan(b, a) / TWO_PI;
   if (h < 0.0) h += 1.0;
   float hDeg = h * 360.0;
   float hh = hDeg + (hDeg < 20.14 ? 360.0 : 0.0);

@@ -20,17 +20,29 @@
 
 float cbrt( float x )
 {
-    return sign(x) * pow(abs(x), 0.33333333f);
+    // GPU pow (exp2·log2) is loose; one Newton step polishes the result to
+    // f32 ulp so GPU-converted pixels agree with the CPU-converted palette
+    // entries in computeMetricPalette (which use exact Math.cbrt).
+    float y = sign(x) * pow(abs(x), 0.3333333333333333f);
+    y -= (y * y * y - x) / (3.0f * y * y + 1e-30f);
+    return y;
 }
 
+// Both transfer functions are sign-mirrored (extended sRGB, as in CSS Color 4)
+// so out-of-gamut linear values survive an encode/decode round-trip — needed
+// by the OUTPUT_LINEAR readback path, harmless for in-gamut [0,1] input.
 float srgb_transfer_function(float a)
 {
-	return .0031308f >= a ? 12.92f * a : 1.055f * pow(a, .4166666666666667f) - .055f;
+	float s = a < 0.0f ? -1.0f : 1.0f;
+	a = abs(a);
+	return s * (.0031308f >= a ? 12.92f * a : 1.055f * pow(a, .4166666666666667f) - .055f);
 }
 
 float srgb_transfer_function_inv(float a)
 {
-	return .04045f < a ? pow((a + .055f) / 1.055f, 2.4f) : a / 12.92f;
+	float s = a < 0.0f ? -1.0f : 1.0f;
+	a = abs(a);
+	return s * (.04045f < a ? pow((a + .055f) / 1.055f, 2.4f) : a / 12.92f);
 }
 
 vec3 linear_srgb_to_oklab(vec3 c)

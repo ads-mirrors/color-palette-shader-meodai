@@ -2,14 +2,32 @@
 #define M_PI 3.1415926535897932384626433832795
 #endif
 
-// Kotsarenko/Ramos weighted RGB distance.
+// "Redmean" weighted RGB distance (Thiadmer Riemersma,
+// https://www.compuphase.com/cmetric.htm), rescaled from 0–255 to 0–1.
 // Operates on sRGB values directly (no linearisation needed).
 // Weights red and blue channels by the mean red value, which improves
 // perceptual uniformity compared to plain Euclidean RGB at minimal cost.
-float kotsarenkoRamos(vec3 c1, vec3 c2) {
+float redmean(vec3 c1, vec3 c2) {
     float rMean = (c1.r + c2.r) * 0.5;
     vec3 d = c1 - c2;
     return sqrt((2.0 + rMean) * d.r*d.r + 4.0 * d.g*d.g + (3.0 - rMean) * d.b*d.b);
+}
+
+// Kotsarenko & Ramos (2010): weighted Euclidean distance in YIQ.
+// "Measuring perceived color difference using YIQ NTSC transmission color
+// space in mobile applications" — operates on gamma-encoded sRGB, like the
+// paper. FCC 1953 NTSC matrix; weights from the paper's optimization.
+vec3 srgb_to_yiq(vec3 c) {
+    return vec3(
+        0.299    * c.r + 0.587    * c.g + 0.114    * c.b,
+        0.595716 * c.r - 0.274453 * c.g - 0.321263 * c.b,
+        0.211456 * c.r - 0.522591 * c.g + 0.311135 * c.b
+    );
+}
+
+float kotsarenkoRamosYIQ(vec3 yiq1, vec3 yiq2) {
+    vec3 d = yiq1 - yiq2;
+    return sqrt(0.5053 * d.x * d.x + 0.299 * d.y * d.y + 0.1957 * d.z * d.z);
 }
 
 // srgb_to_cielab / srgb_to_cielab_d50 live in cielab2rgb.frag.glsl (included before this file)

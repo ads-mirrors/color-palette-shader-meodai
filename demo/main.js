@@ -587,7 +587,8 @@ $distanceMetric.innerHTML = `
   <optgroup label="Misc">
     <option value="cam16ucsD65">CAM16-UCS D65</option>
     <option value="liMatch">Li-match</option>
-    <option value="kotsarenkoRamos">Kotsarenko / Ramos</option>
+    <option value="redmean">Redmean (weighted RGB)</option>
+    <option value="kotsarenkoRamosYIQ">Kotsarenko / Ramos (YIQ)</option>
     <option value="rgb">RGB</option>
   </optgroup>
 `;

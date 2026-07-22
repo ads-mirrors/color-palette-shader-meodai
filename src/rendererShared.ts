@@ -52,6 +52,9 @@ export const DISTANCE_METRIC_MAP = {
   oklab: 1,
   deltaE76: 2,
   deltaE2000: 3,
+  redmean: 4,
+  // Deprecated alias: the formula was always Riemersma's "redmean", not the
+  // YIQ-based Kotsarenko/Ramos metric. Kept so existing configs keep working.
   kotsarenkoRamos: 4,
   deltaE94: 5,
   oklrab: 6,
@@ -59,6 +62,8 @@ export const DISTANCE_METRIC_MAP = {
   okLightness: 8,
   liMatch: 9,
   cam16ucsD65: 10,
+  // The genuine Kotsarenko & Ramos (2010) metric: weighted Euclidean in YIQ.
+  kotsarenkoRamosYIQ: 11,
 } as const;
 
 type BaseRendererOptions = {
